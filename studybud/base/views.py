@@ -61,7 +61,7 @@ def home(request):
     rooms = Room.objects.filter(Q(topic__name__icontains=q)
                                 | Q(name__icontains=q)
                                 | Q(description__icontains=q))  # get all rooms from the database
-    topics = Topic.objects.all()
+    topics = Topic.objects.all()[:5]
     room_count = rooms.count()
     room_messages = Message.objects.filter(Q(room__topic__name__icontains=q))
 
@@ -90,24 +90,23 @@ def room(request, pk):
     return render(request, 'base/room.html', context)
 
 
-
-def userProfile(request,pk):
-    user=User.objects.get(id=pk)
-    room_messages=user.message_set.all()
-    topics=Topic.objects.all()
-    rooms=user.room_set.all()
-    context={'user':user,'rooms':rooms,'topics':topics,'room_messages':room_messages}
-    return render(request, 'base/profile.html',context)
-
+def userProfile(request, pk):
+    user = User.objects.get(id=pk)
+    room_messages = user.message_set.all()
+    topics = Topic.objects.all()
+    rooms = user.room_set.all()
+    context = {'user': user, 'rooms': rooms,
+               'topics': topics, 'room_messages': room_messages}
+    return render(request, 'base/profile.html', context)
 
 
 @login_required(login_url='login')
 def createRoom(request):
     form = RoomForm()
-    topics=Topic.objects.all()
+    topics = Topic.objects.all()
     if request.method == 'POST':
-        topic_name=request.POST.get('topic')
-        topic,created=Topic.objects.get_or_create(name=topic_name)
+        topic_name = request.POST.get('topic')
+        topic, created = Topic.objects.get_or_create(name=topic_name)
         Room.objects.create(
             host=request.user,
             topic=topic,
@@ -115,30 +114,30 @@ def createRoom(request):
             description=request.POST.get('description')
 
         )
-        
+
         return redirect('home')
 
-    context = {'form': form,'topics':topics}
+    context = {'form': form, 'topics': topics}
     return render(request, 'base/room_form.html', context)
 
 
 @login_required(login_url='login')
 def updateRoom(request, pk):
     room = Room.objects.get(id=pk)
-    topics=Topic.objects.all()
+    topics = Topic.objects.all()
     form = RoomForm(instance=room)  # prefilled with the data of the room
     if request.user != room.host:
         return HttpResponse('You are not allowed to edit this room')
     if request.method == 'POST':
-        topic_name=request.POST.get('topic')
-        topic,created=Topic.objects.get_or_create(name=topic_name)
-        room.name=request.POST.get('name')
-        room.description=request.POST.get('description')
-        room.topic=topic
+        topic_name = request.POST.get('topic')
+        topic, created = Topic.objects.get_or_create(name=topic_name)
+        room.name = request.POST.get('name')
+        room.description = request.POST.get('description')
+        room.topic = topic
         room.save()
-      
+
         return redirect('home')
-    context = {'form': form,'topics':topics,'room':room}
+    context = {'form': form, 'topics': topics, 'room': room}
     return render(request, 'base/room_form.html', context)
 
 
@@ -166,17 +165,19 @@ def deleteMessage(request, pk):
 
 @login_required(login_url='login')
 def updateUser(request):
-    user=request.user
-    form=UserForm(instance=user)
-    if request.method=='POST':
-        form=UserForm(request.POST,instance=user) # prefilled with the data of the user
+    user = request.user
+    form = UserForm(instance=user)
+    if request.method == 'POST':
+        # prefilled with the data of the user
+        form = UserForm(request.POST, instance=user)
         if form.is_valid():
             form.save()
-            return redirect('user-profile',pk=user.id)
-    return render(request, 'base/update-user.html',{'form':form})
+            return redirect('user-profile', pk=user.id)
+    return render(request, 'base/update-user.html', {'form': form})
 
 
 def topicsPage(request):
-    topics=Topic.objects.filter()
- 
-    return render(request, 'base/topics.html',{'topics':topics})
+    q = request.GET.get('q') if request.GET.get('q') else ''
+    topics = Topic.objects.filter(name__contains=q)
+
+    return render(request, 'base/topics.html', {'topics': topics})
