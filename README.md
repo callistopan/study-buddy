@@ -1,4 +1,4 @@
-# Welcome to the studyBuddy
+# Welcome to the StudyBuddy
 
 ## Home page
 
