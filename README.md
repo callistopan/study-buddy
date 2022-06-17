@@ -1,4 +1,4 @@
-# Welcome to the study-buddy wiki!
+# Welcome to the study-buddy
 
 ## Home page
 
